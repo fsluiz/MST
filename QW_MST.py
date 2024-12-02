@@ -61,21 +61,20 @@ def qubit_basis_states(num_qubits):
     
     return basis_states
 # Função para calcular as probabilidades de transição entre estados
-
 def prob_transition(graph, t_max, num_nodes):
-    transition_probs = np.zeros((num_nodes, num_nodes))
     evolution_operator = quantum_walk(graph, t_max)
     num_qubits = qubits_number(num_nodes)
-    # Pré-calcular as bases
     basis_vectors = qubit_basis_states(num_qubits)
     
-    for i in range(num_nodes):
-        ket_i = basis_vectors[i]
-        for j in range(i, num_nodes):
-            ket_j = basis_vectors[j]
-            prob = np.abs((ket_j.dag() * evolution_operator * ket_i))**2
-            transition_probs[i, j] = prob
-            transition_probs[j, i] = prob  # Simetria
+    # Constrói uma matriz onde cada coluna é um estado da base
+    basis_matrix = np.column_stack([basis.full() for basis in basis_vectors])
+    
+    # Aplica a evolução a todos os estados de uma vez
+    evolved_states = evolution_operator.full() @ basis_matrix
+    
+    # Calcula as probabilidades de transição
+    transition_probs = np.abs(np.dot(basis_matrix.T.conj(), evolved_states))**2
+    
     return transition_probs
 
 # Gera a MST com base nas probabilidades de transição
